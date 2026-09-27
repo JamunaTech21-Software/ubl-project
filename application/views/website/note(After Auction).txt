@@ -1,0 +1,2 @@
+1. Share Lot: when any person bid 10 bag where this lot is 20 bag. if no one did't share with him then after time out full lot SQ will go to this person side.
+2.

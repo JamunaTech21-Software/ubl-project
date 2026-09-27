@@ -1,0 +1,66 @@
+SELECT 
+		a.lot_id, 
+		a.my_bid, 
+		
+		(CASE 
+
+			WHEN a.bags > 30 AND a.bags < sum(a.sq) THEN CONCAT(SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.sq > 0 THEN @bqq := a.sq END ORDER BY a.id ASC SEPARATOR ','), ',', '1'), ',', SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.bq_hbpma > 0 THEN a.bags - @bqq END ORDER BY a.`auto_bid_rate` DESC, a.id ASC SEPARATOR ','), ',', '1'))
+         
+         	WHEN a.bags > 19 AND a.bags <= 30 AND COUNT(a.buyer_id) > 1 THEN CONCAT(SUBSTRING_INDEX(GROUP_CONCAT(a.sq ORDER BY a.bq_hbpma ASC SEPARATOR ','), ',', '1'), ',', SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.bq_hbpma > 0 THEN a.sq END ORDER BY a.`auto_bid_rate` DESC, a.id ASC SEPARATOR ','), ',', '1'))
+
+			WHEN a.bags > 30 AND COUNT(a.buyer_id) = 2 THEN CONCAT(SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.sq > 0 THEN a.sq END ORDER BY a.id ASC SEPARATOR ','), ',', '1'), ',', SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.bq_hbpma > 0 THEN a.sq END ORDER BY a.`auto_bid_rate` DESC, a.id ASC SEPARATOR ','), ',', '1'))
+			
+			WHEN a.bags > 30 AND COUNT(a.buyer_id) > 2 THEN CONCAT(SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.sq > 0 THEN a.sq END ORDER BY a.id ASC SEPARATOR ','), ',', '1'), ',', SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.bq_hbpma > 0 THEN a.sq END ORDER BY a.`auto_bid_rate` DESC, a.id ASC SEPARATOR ','), ',', '2'))
+         
+			ELSE a.sq
+		END	
+         
+		) AS sq,
+		
+		(CASE 
+			
+			WHEN a.bags > 30 AND a.bags < sum(a.sq) THEN CONCAT(SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.sq > 0 THEN a.bidder END ORDER BY a.id ASC SEPARATOR '/'), '/', '1'), '/', SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.bq_hbpma > 0 THEN a.bidder END ORDER BY a.`auto_bid_rate` DESC, a.id ASC SEPARATOR '/'), '/', '1'))
+         
+         	WHEN a.bags > 19 AND a.bags <= 30 AND COUNT(a.buyer_id) > 1 THEN CONCAT(SUBSTRING_INDEX(GROUP_CONCAT(a.bidder ORDER BY a.bq_hbpma ASC SEPARATOR '/'), '/', '1'), '/', SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.bq_hbpma > 0 THEN a.bidder END ORDER BY a.`auto_bid_rate` DESC, a.id ASC SEPARATOR '/'), '/', '1'))
+         
+        	WHEN a.bags > 30 AND COUNT(a.buyer_id) = 2 THEN CONCAT(SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.sq > 0 THEN a.bidder END ORDER BY a.id ASC SEPARATOR '/'), '/', '1'), '/', SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.bq_hbpma > 0 THEN a.bidder END ORDER BY a.`auto_bid_rate` DESC, a.id ASC SEPARATOR '/'), '/', '1'))
+			
+			WHEN a.bags > 30 AND COUNT(a.buyer_id) > 2 THEN CONCAT(SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.sq > 0 THEN a.bidder END ORDER BY a.id ASC SEPARATOR '/'), '/', '1'), '/', SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.bq_hbpma > 0 THEN a.bidder END ORDER BY a.`auto_bid_rate` DESC, a.id ASC SEPARATOR '/'), '/', '2'))
+         
+			ELSE a.bidder
+		END	
+         
+		) AS bidder,
+		
+		(CASE 
+			
+			WHEN a.bags > 30 AND a.bags < sum(a.sq) THEN CONCAT(SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.sq > 0 THEN a.auto_bid_rate END ORDER BY a.id ASC SEPARATOR ','), ',', '1'), ',', SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.bq_hbpma > 0 THEN a.auto_bid_rate END ORDER BY a.`auto_bid_rate` DESC, a.id ASC SEPARATOR ','), ',', '1'))
+         
+         	WHEN a.bags > 19 AND a.bags <= 30 AND COUNT(a.buyer_id) > 1 THEN CONCAT(SUBSTRING_INDEX(GROUP_CONCAT(a.auto_bid_rate ORDER BY a.bq_hbpma ASC SEPARATOR ','), ',', '1'), ',', SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.bq_hbpma > 0 THEN a.auto_bid_rate END ORDER BY a.`auto_bid_rate` DESC, a.id ASC SEPARATOR ','), ',', '1'))
+
+			WHEN a.bags > 30 AND COUNT(a.buyer_id) = 2 THEN CONCAT(SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.sq > 0 THEN a.auto_bid_rate END ORDER BY a.id ASC SEPARATOR ','), ',', '1'), ',', SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.bq_hbpma > 0 THEN a.auto_bid_rate END ORDER BY a.`auto_bid_rate` DESC, a.id ASC SEPARATOR ','), ',', '1'))
+			
+			WHEN a.bags > 30 AND COUNT(a.buyer_id) > 2 THEN CONCAT(SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.sq > 0 THEN a.auto_bid_rate END ORDER BY a.id ASC SEPARATOR ','), ',', '1'), ',', SUBSTRING_INDEX(GROUP_CONCAT(CASE WHEN a.bq_hbpma > 0 THEN a.auto_bid_rate END ORDER BY a.`auto_bid_rate` DESC, a.id ASC SEPARATOR ','), ',', '2'))
+         
+			ELSE a.auto_bid_rate 
+		END	
+         
+		) AS rate_range,
+		
+		a.buyer_id, 
+		COUNT(a.buyer_id) AS `no_of_buyer`, 
+		IF(c.reserve_price > 0, c.reserve_price, c.valuation) AS reserve_price, 
+		c.sold_wd, 
+		c.max_auto_bid 
+		
+		FROM buyer_auction a 
+		
+		JOIN (SELECT lot_id, MAX(my_bid) my_bid FROM buyer_auction WHERE date_format(my_bid_datetime,'%Y-%m-%d') ='2020-06-14' GROUP BY lot_id) b ON (a.lot_id = b.lot_id AND a.my_bid = b.my_bid) 
+		
+		LEFT JOIN invoice_entry c ON (a.lot_id = c.id) 
+		
+		WHERE date_format(a.my_bid_datetime,'%Y-%m-%d') = '2020-06-14' AND a.bags != a.bq_hbpma AND c.auction_history IS NULL 
+		
+		GROUP BY a.lot_id
+		
+		ORDER BY a.id ASC

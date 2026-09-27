@@ -1,0 +1,4 @@
+SELECT invoice_entry.lot_no, (invoice_entry.net_kgs - (IFNULL(sale_entry.buyer1_total_kgs,0) + IFNULL(sale_entry.buyer2_total_kgs,0) + IFNULL(sale_entry.buyer3_total_kgs,0))) AS net_kgs
+
+FROM invoice_entry 
+JOIN sale_entry ON (invoice_entry.id = sale_entry.invoice_id) WHERE invoice_entry.sale_no='1' AND invoice_entry.season='2021-2022' GROUP BY invoice_entry.id HAVING (NOT net_kgs='0')
